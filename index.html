@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>A+ Final Exam Needed Calculator</title>
+  <style>
+    :root {
+      --bg: #0b1220;
+      --card: #121a2b;
+      --muted: #8aa0c4;
+      --text: #e8f0ff;
+      --accent: #4f8cff;
+      --good: #2ecc71;
+      --warn: #f1c40f;
+      --bad: #e74c3c;
+    }
+    * { box-sizing: border-box; }
+    body { margin:0; font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial, "Noto Sans", "Apple Color Emoji", "Segoe UI Emoji"; background: radial-gradient(1200px 800px at 10% 0%, #14203c 0%, #0b1220 55%, #050a16 100%); color: var(--text); }
+    header { padding: 24px; text-align: center; }
+    header h1 { margin: 0 0 6px; font-size: clamp(1.2rem, 2.8vw, 2rem); }
+    header p { margin: 0; color: var(--muted); font-size: 0.95rem; }
+    .wrap { max-width: 880px; margin: 20px auto 60px; padding: 0 16px; }
+
+    .card { background: linear-gradient(180deg, rgba(255,255,255,0.05), rgba(255,255,255,0.02)); border: 1px solid rgba(255,255,255,0.08); border-radius: 16px; box-shadow: 0 10px 30px rgba(0,0,0,0.35); padding: 18px; }
+    .grid { display: grid; gap: 14px; grid-template-columns: repeat(12, 1fr); }
+
+    .field { grid-column: span 6; display: flex; flex-direction: column; gap: 6px; }
+    @media (max-width: 720px) { .field { grid-column: span 12; } }
+    label { font-weight: 600; color: var(--text); display:flex; align-items:center; justify-content:space-between; gap:8px; }
+    .hint { font-weight: 500; color: var(--muted); font-size: 0.85rem; }
+    input[type="number"] { width: 100%; padding: 12px 12px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.15); background: #0f1627; color: var(--text); font-size: 1rem; outline: none; transition: border .15s ease, box-shadow .15s ease; }
+    input[type="number"]:focus { border-color: var(--accent); box-shadow: 0 0 0 4px rgba(79, 140, 255, 0.2); }
+
+    .actions { display:flex; flex-wrap:wrap; gap: 10px; margin-top: 8px; }
+    button { cursor: pointer; border: none; padding: 12px 16px; border-radius: 12px; font-weight: 700; letter-spacing: 0.2px; }
+    .primary { background: var(--accent); color: white; }
+    .ghost { background: transparent; color: var(--muted); border: 1px solid rgba(255,255,255,0.15); }
+
+    .result { margin-top: 16px; padding: 16px; border-radius: 12px; background: #0e1626; border: 1px dashed rgba(255,255,255,0.18); }
+    .result h2 { margin: 0 0 8px; font-size: 1.2rem; }
+    .pill { display:inline-block; padding: 6px 10px; border-radius: 999px; font-weight: 700; }
+    .ok { background: rgba(46, 204, 113, 0.15); color: var(--good); border: 1px solid rgba(46,204,113,0.35); }
+    .maybe { background: rgba(241, 196, 15, 0.15); color: var(--warn); border: 1px solid rgba(241,196,15,0.35); }
+    .nope { background: rgba(231, 76, 60, 0.15); color: var(--bad); border: 1px solid rgba(231,76,60,0.35); }
+
+    .split { display:flex; gap: 14px; flex-wrap: wrap; align-items: center; }
+    .scorebox { flex:1; min-width: 220px; padding: 12px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.12); background: #0f1829; }
+    .scorebox h3 { margin:0 0 2px; font-size: 0.95rem; color: var(--muted); }
+    .scorebox .big { font-size: 1.8rem; font-weight: 800; }
+
+    .note { margin-top: 12px; color: var(--muted); font-size: 0.9rem; }
+    footer { text-align:center; color: var(--muted); padding: 24px; font-size: 0.85rem; }
+    a { color: var(--accent); text-decoration: none; }
+
+    /* Highlight for the needed-in-final value */
+    .highlight { background: yellow; color: #111; font-weight: 900; padding: 2px 8px; border-radius: 6px; box-shadow: 0 0 0 2px rgba(0,0,0,0.15) inset; }
+    .tiny { font-size: 0.85rem; color: var(--muted); }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Final Exam Needed (A+ / GPA 5) — 100 Marks Course</h1>
+    <p>Enter your obtained marks so far. The tool tells you how many marks you must score in the <strong>Final (out of 40)</strong> to reach the target total (default 80 for A+).</p>
+  </header>
+
+  <div class="wrap">
+    <div class="card">
+      <div class="grid">
+        <div class="field">
+          <label>Class Attendance (%) <span class="hint">0–100% → max 7</span></label>
+          <input id="attp" type="number" inputmode="decimal" min="0" max="100" step="1" placeholder="e.g., 85" oninput="updateAttMark()" />
+          <div class="tiny" id="attMarkDisplay">That is <strong>0.00 / 7</strong> marks.</div>
+        </div>
+        <div class="field">
+          <label>Assignment <span class="hint">max 5</span></label>
+          <input id="assn" type="number" inputmode="decimal" min="0" max="5" step="0.1" placeholder="e.g., 4.5" />
+        </div>
+        <div class="field">
+          <label>Midterm Exam <span class="hint">max 25</span></label>
+          <input id="mid" type="number" inputmode="decimal" min="0" max="25" step="0.1" placeholder="e.g., 18" />
+        </div>
+        <div class="field">
+          <label>Quiz Average <span class="hint">max 15</span></label>
+          <input id="quiz" type="number" inputmode="decimal" min="0" max="15" step="0.1" placeholder="e.g., 12" />
+        </div>
+        <div class="field">
+          <label>Presentation <span class="hint">max 8 • optional</span></label>
+          <input id="pres" type="number" inputmode="decimal" min="0" max="8" step="0.1" placeholder="e.g., 6 (or leave blank)" />
+        </div>
+        <div class="field">
+          <label>Target Total for A+ <span class="hint">default 80</span></label>
+          <input id="target" type="number" inputmode="decimal" min="0" max="100" step="1" value="80" />
+        </div>
+      </div>
+
+      <div class="actions">
+        <button class="primary" onclick="calc()">Calculate Needed Final</button>
+        <button class="ghost" onclick="resetAll()">Reset</button>
+      </div>
+
+      <div id="out" class="result" style="display:none"></div>
+      <div class="note">Formula: <code>Needed Final (out of 40) = Target − (Attendance% × 7/100 + Assignment + Midterm + Quiz + Presentation)</code>. (Attendance% is converted to marks out of 7.)</div>
+    </div>
+
+    <footer>
+      Built for Bangladeshi university grading with A+ ≈ total ≥ 80. If your department uses a different A+ cut-off, change the "Target Total" field.
+    </footer>
+  </div>
+
+  <script>
+    function num(id){
+      const el = document.getElementById(id);
+      const v = el ? el.value.trim() : "";
+      if(v === "") return 0;
+      return Number(v);
+    }
+    function clamp(x, lo, hi){ return Math.min(Math.max(x, lo), hi); }
+    function fmt(x){ return Number.isInteger(x) ? x.toString() : x.toFixed(2).replace(/\.00$/, ""); }
+
+    function attMarks(){
+      const perc = num('attp');
+      return clamp((perc/100) * 7, 0, 7);
+    }
+
+    function updateAttMark(){
+      const m = attMarks();
+      const el = document.getElementById('attMarkDisplay');
+      el.innerHTML = `That is <strong>${fmt(m)} / 7</strong> marks.`;
+    }
+
+    function calc(){
+      const attPerc = num('attp');
+      const assn = num('assn');
+      const mid  = num('mid');
+      const quiz = num('quiz');
+      const pres = num('pres');
+      let target = num('target');
+      if(!isFinite(target) || target <= 0) target = 80;
+
+      // Validate ranges
+      const bounds = [
+        ['attp', attPerc, 0, 100],
+        ['assn', assn, 0, 5],
+        ['mid', mid, 0, 25],
+        ['quiz', quiz, 0, 15],
+        ['pres', pres, 0, 8],
+        ['target', target, 0, 100],
+      ];
+
+      for(const [id, val, lo, hi] of bounds){
+        const el = document.getElementById(id);
+        if(val < lo || val > hi || isNaN(val)){
+          if(el) el.style.borderColor = 'var(--bad)';
+          if(el) el.focus();
+          show(`Please enter a valid number for <strong>${id}</strong> (min ${lo}, max ${hi}).`, 'nope');
+          return;
+        } else if(el){
+          el.style.borderColor = 'rgba(255,255,255,0.15)';
+        }
+      }
+
+      const att = attMarks(); // convert % to marks out of 7
+      const earned = att + assn + mid + quiz + pres; // max 60 including presentation
+      const neededRaw = target - earned;
+      const needed = clamp(neededRaw, 0, 40);
+      const possibleMax = earned + 40;
+
+      let headline = '';
+
+      if(neededRaw <= 0){
+        headline = `You already have enough for your target (${fmt(target)}).`;
+        headline += ` <span class="pill ok">🎉 No marks needed in Final</span>`;
+      } else if(possibleMax < target){
+        headline = `Target unreachable. <span class="pill nope">Even 40/40 won't reach ${fmt(target)}</span>`;
+      } else {
+        const badgeClass = needed >= 36 ? 'nope' : (needed >= 28 ? 'maybe' : 'ok');
+        headline = `You need <span class="pill ${badgeClass}">${fmt(needed)} / 40</span> in the Final.`;
+      }
+
+      const out = document.getElementById('out');
+      out.style.display = 'block';
+      out.innerHTML = `
+        <h2>${headline}</h2>
+        <div class="split">
+          <div class="scorebox">
+            <h3>Your earned so far</h3>
+            <div class="big">${fmt(earned)} / 60 <span class="hint" style="font-size:0.9rem">(Attendance ${fmt(att)} / 7)</span></div>
+          </div>
+          <div class="scorebox">
+            <h3>Needed in Final</h3>
+            <div class="big highlight">${fmt(needed)} / 40</div>
+          </div>
+          <div class="scorebox">
+            <h3>Target total</h3>
+            <div class="big">${fmt(target)} / 100</div>
+          </div>
+        </div>
+      `;
+    }
+
+    function show(msg, type){
+      const out = document.getElementById('out');
+      out.style.display = 'block';
+      out.innerHTML = `<div class="pill ${type}">${msg}</div>`;
+    }
+
+    function resetAll(){
+      for(const id of ['attp','assn','mid','quiz','pres']){
+        const el = document.getElementById(id);
+        el.value = '';
+        el.style.borderColor = 'rgba(255,255,255,0.15)';
+      }
+      document.getElementById('target').value = 80;
+      updateAttMark();
+      const out = document.getElementById('out');
+      out.style.display = 'none';
+      out.innerHTML = '';
+    }
+
+    // initialize display
+    updateAttMark();
+  </script>
+</body>
+</html>
